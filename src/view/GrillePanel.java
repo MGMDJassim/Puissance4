@@ -19,7 +19,7 @@ public class GrillePanel extends JPanel {
     ControllerJeu controller;
     GameMode mode;
 
-    public GrillePanel(Game plateau, GameMode mode) {
+    public GrillePanel(Game plateau, GameMode mode, GameUI window) {
         this.plateau = plateau;
         this.mode = mode;
         this.controller = new ControllerJeu(plateau);
@@ -28,7 +28,32 @@ public class GrillePanel extends JPanel {
         menuPanel = new JPanel();
         menuPanel.setPreferredSize(new Dimension(200, 0)); // largeur fixe
         menuPanel.setBackground(Color.DARK_GRAY);
-        menuPanel.add(new JLabel("Menu"));
+        menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
+
+        JLabel menuLabel = new JLabel("Menu");
+        menuLabel.setForeground(Color.WHITE);
+        menuLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        menuPanel.add(Box.createVerticalStrut(20));
+        menuPanel.add(menuLabel);
+        menuPanel.add(Box.createVerticalStrut(20));
+
+        JButton undoButton = new JButton("Undo");
+        JButton rejouerButton = new JButton("Rejouer");
+        JButton quitterButton = new JButton("Quitter");
+        undoButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        rejouerButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        quitterButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        menuPanel.add(undoButton);
+        menuPanel.add(Box.createVerticalStrut(8));
+        menuPanel.add(rejouerButton);
+        menuPanel.add(Box.createVerticalStrut(8));
+        menuPanel.add(quitterButton);
+
+        undoButton.addActionListener(e -> undo());
+
+        rejouerButton.addActionListener(e -> window.startGame(mode));
+
+        quitterButton.addActionListener(e -> window.showPanel("HOME"));
 
         BoardCanvas canvas = new BoardCanvas(plateau);
         canvas.setBackground(new Color(30, 144, 255));
@@ -110,7 +135,12 @@ public class GrillePanel extends JPanel {
         Object o = canvas.getClientProperty("dao");
         if (o instanceof PartieDAO) ((PartieDAO) o).savePartie(plateau, mode);
     }
-    
+
+    public void undo() {
+        plateau.undo();
+        repaint();
+    }
+
     private static class BoardCanvas extends JPanel {
         private final int rows;
         private final int cols;

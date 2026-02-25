@@ -51,6 +51,20 @@ public class Game {
         return -1;
     }
 
+    public void undo() {
+        if (moveHistory.isEmpty() || gameOver) return;
+        int lastCol = moveHistory.remove(moveHistory.size() - 1) - 1; // convert back to 0-based
+        for (int r = 0; r < rows; r++) {
+            if (board[r][lastCol] != 0) {
+                board[r][lastCol] = 0;
+                currentPlayer = 3 - currentPlayer;
+                gameOver = false;
+                winningPositions = null;
+                break;
+            }
+        }
+    }
+
     private boolean checkWin(int r, int c) {
         int p = board[r][c];
         if (p == 0) return false;
@@ -71,12 +85,10 @@ public class Game {
     private int[][] collectWinningPositions(int r, int c, int dr, int dc, int winLen, int p) {
         List<int[]> list = new ArrayList<>();
         list.add(new int[]{r, c});
-        // forward direction
         int rr = r + dr, cc = c + dc;
         while (rr >= 0 && rr < rows && cc >= 0 && cc < cols && board[rr][cc] == p && list.size() < winLen) {
             list.add(new int[]{rr, cc}); rr += dr; cc += dc;
         }
-        // backward direction
         rr = r - dr; cc = c - dc;
         while (rr >= 0 && rr < rows && cc >= 0 && cc < cols && board[rr][cc] == p && list.size() < winLen) {
             list.add(0, new int[]{rr, cc}); rr -= dr; cc -= dc;
@@ -103,7 +115,6 @@ public class Game {
         return cnt;
     }
 
-    // Return a deep copy of the board
     public int[][] getBoardCopy() {
         int[][] copy = new int[rows][cols];
         for (int i = 0; i < rows; i++) System.arraycopy(board[i], 0, copy[i], 0, cols);

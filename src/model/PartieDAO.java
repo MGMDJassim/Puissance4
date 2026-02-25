@@ -6,12 +6,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.io.File;
 
 /**
  * DAO pour sauvegarder les parties et les situations.
  *
  * PRINCIPE D'INDEXATION (cours) :
- *  - Chaque état de plateau est encodé en base 3 (72 chiffres pour 9×8)
+ *  - Chaque état de plateau est encodé en base 3
  *    puis converti en hexadécimal → la valeur hex EST l'index.
  *  - On stocke toujours la forme CANONIQUE = min(hex, sym_hex) pour
  *    dédupliquer automatiquement les situations symétriques.
@@ -25,6 +26,39 @@ public class PartieDAO {
     public PartieDAO(DBHelper helper) throws SQLException {
         this.db = helper;
         this.db.initDatabase();
+    }
+
+    /**
+     * Importe des parties depuis un fichier texte.
+     * Format : une partie par ligne → séquence [MODE]
+     *   ex: 4534621 HUMAN_VS_HUMAN
+     * Les lignes vides et commençant par # sont ignorées.
+     * Retourne le nombre de parties importées avec succès.
+     */
+    public int importFromFile(File file) throws Exception {
+        // Le nom du fichier (sans extension) EST la séquence de coups
+        String filename = file.getName();
+        String sequence = filename.replaceAll("(?i)\\.txt$", "").replaceAll("[^1-9]", "");
+        if (sequence.isEmpty()) return 0;
+
+        Game game = new Game();
+        for (char ch : sequence.toCharArray()) {
+            int col = Character.getNumericValue(ch) - 1;
+            if (game.drop(col) == -1) break;
+            if (game.isGameOver()) break;
+        }
+        if (game.getMoveHistory().isEmpty()) return 0;
+        savePartie(game, GameMode.HUMAN_VS_HUMAN);
+        return 1;
+    }
+
+    /**
+     * Importe plusieurs fichiers d'un coup.
+     */
+    public int importFromFiles(File[] files) throws Exception {
+        int total = 0;
+        for (File f : files) total += importFromFile(f);
+        return total;
     }
 
     /**
@@ -70,7 +104,6 @@ public class PartieDAO {
                 }
 
                 c.commit();
-                System.out.println("Partie sauvegardée → situation=" + canonical + " winner=" + winner);
 
             } catch (SQLException ex) {
                 c.rollback();

@@ -2,11 +2,12 @@ package view;
 
 import java.awt.*;
 import javax.swing.*;
+import model.DBHelper;
 import model.GameMode;
 
 public class HomePanel extends JPanel {
 
-    JButton startButton;
+    JButton startButton, bdButton;
     JRadioButton hvhButton;
     JRadioButton hvaiButton;
     JRadioButton aivaiButton;
@@ -14,6 +15,7 @@ public class HomePanel extends JPanel {
     public HomePanel(GameUI window) {
 
         startButton = new JButton("Start Game");
+        bdButton = new JButton("Database");
         hvhButton = new JRadioButton("Human vs Human", true);
         hvaiButton = new JRadioButton("Human vs AI");
         aivaiButton = new JRadioButton("AI vs AI");
@@ -37,7 +39,7 @@ public class HomePanel extends JPanel {
         buttonsPanel.add(aivaiButton);
         buttonsPanel.add(Box.createVerticalStrut(15));
         buttonsPanel.add(startButton);
-
+        buttonsPanel.add(bdButton);
         centerPanel.add(buttonsPanel);
         add(centerPanel, BorderLayout.CENTER);
 
@@ -47,5 +49,15 @@ public class HomePanel extends JPanel {
                     : GameMode.AI_VS_AI;
             window.startGame(mode);
         });
+        
+        bdButton.addActionListener(e -> {
+            try {
+                DBHelper helper = new DBHelper("localhost", 5432, "puissance4", "postgres", "postgre");
+                new DBViewer(helper).setVisible(true);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Connexion impossible : " + ex.getMessage(), "Erreur DB", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
     }
 }
